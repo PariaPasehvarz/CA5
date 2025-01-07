@@ -49,11 +49,15 @@ module main_controller #(parameter FILTER_ADDR_WIDTH) (
         PIPELINE_START     = 4'd4,
         PIPELINE_HALF_FULL = 4'd5,
         PIPELINE_FULL      = 4'd6,
-        WRITE_REQ          = 4'd7,
-        WAIT_FOR_WRITE     = 4'd8,
-        NEXT_IF            = 4'd9,
-        UPDATE_START_PTR   = 4'd10,
-        STALL              = 4'd11;
+        NEXT_PSUM_ADDR     = 4'd7,
+        NEXT_IF            = 4'd8,
+        UPDATE_START_PTR   = 4'd9,
+        READ_REQ           = 4'd10,
+        WRITE_REQ          = 4'd11,
+        WAIT_FOR_WRITE     = 4'd12,
+        STALL              = 4'd13,
+        ADD_NEXT           = 4'd14;
+        
 
     reg [3:0] current_state;
     reg [3:0] next_state;
@@ -103,11 +107,15 @@ module main_controller #(parameter FILTER_ADDR_WIDTH) (
             end
 
             PIPELINE_FULL: begin
-                if (is_last_filter & go_next_filter) begin
+                if (psum_mode) begin
+                    next_state = READ_REQ;
+                end
+                else if (is_last_filter & go_next_filter) begin
                     next_state = NEXT_IF;
                 end else if (freeze)
-                    next_state = PIPELINE_FULL; else begin
-                    next_state = f_co ? WRITE_REQ : PIPELINE_FULL;
+                    next_state = PIPELINE_FULL;
+                else begin
+                    next_state = f_co ? NEXT_PSUM_ADDR : PIPELINE_FULL;
                 end
             end
 
@@ -121,7 +129,7 @@ module main_controller #(parameter FILTER_ADDR_WIDTH) (
                 else if (stall == 2'b11)
                     next_state = STALL;
                 else if (stall == 2'b10)
-                    next_state = PIPELINE_FULL;
+                    next_state = ADD_NEXT;
             end
 
             NEXT_IF: begin
@@ -135,6 +143,22 @@ module main_controller #(parameter FILTER_ADDR_WIDTH) (
                 next_state = PIPELINE_FULL;
             end
 
+            NEXT_PSUM_ADDR: begin
+                if (psum_mode) begin //TODO: add psum_mode input
+                    next_state = READ_REQ;
+                end else begin
+                    next_state = PIPELINE_FULL;
+                end
+            end
+
+            READ_REQ: begin //TODO: add psum_buffer_valid input
+                next_state = psum_buffer_valid ? WRITE_REQ : READ_REQ;
+            end
+
+            ADD_NEXT: begin
+                next_state = READ_REQ;
+            end
+
             default: next_state = IDLE;
         endcase
         if(error)
@@ -143,7 +167,7 @@ module main_controller #(parameter FILTER_ADDR_WIDTH) (
     wire run_pipe;
     assign run_pipe = ~freeze & ~f_co;
     always @(*) begin
-        
+        {first_time, psum_buffer_ren,next_psum_raddr,next_psum_waddr} = 0; //todo: add the outputs
         {en_f_counter,next_start, chip_en, global_rst,en_p_traverse,ren,ld_IF,mult_en,i_en,ld_result,rst_f_counter,next_stride,done,next_filter,
         rst_stride,stall_signal,rst_stride_ended,rst_result,rst_is_last_filter,rst_current_filter,rst_p_valid,make_empty } = 0;
 
@@ -193,6 +217,7 @@ module main_controller #(parameter FILTER_ADDR_WIDTH) (
                 next_stride = run_pipe & !stride_ended & !ended & go_next_stride;
                 next_filter = !freeze & go_next_filter;
                 rst_stride = !freeze & go_next_filter;
+                first_time = run_pipe ? 0 :first_time;
             end
 
             WRITE_REQ: begin
@@ -204,8 +229,7 @@ module main_controller #(parameter FILTER_ADDR_WIDTH) (
 
             WAIT_FOR_WRITE: begin
                 chip_en = 1'b1;
-                rst_stride_ended = !is_last_filter;
-                rst_result = (stall == 2'b10) ? 1'b1 : 1'b0;
+                //todo: remoce rst_Result
             end
 
             NEXT_IF: begin
@@ -224,6 +248,23 @@ module main_controller #(parameter FILTER_ADDR_WIDTH) (
             end
             UPDATE_START_PTR: begin
                 next_start = 1'b1;
+                chip_en = 1'b1;
+            end
+
+            NEXT_PSUM_ADDR: begin
+                rst_f_counter = 1'b1;
+                chip_en = 1'b1;
+                first_time = 1'b1;
+                next_psum_waddr = 1'b1; //TODO: not always can write, must stall
+                rst_stride_ended = !is_last_filter; //TODO: previously on wait_for_write, could cause problems, may need to be always 1
+            end
+            READ_REQ: begin
+                psum_buffer_ren = can_read_psum; //todo add can_read_psum
+                chip_en = 1'b1; 
+            end
+            ADD_NEXT: begin
+                next_psum_raddr = 1'b1;
+                chip_en = 1'b1;
             end
         endcase
     end
