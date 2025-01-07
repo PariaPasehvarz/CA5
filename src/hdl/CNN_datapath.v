@@ -54,6 +54,10 @@ module CNN_datapath #(
     input wire first_time,
     input next_psum_waddr,
     input next_psum_raddr,
+    input first_time,
+    input psum_buffer_ren,
+    input next_psum_raddr,
+    input next_psum_waddr,
     
     output IF_empty,
     output filter_cannot_read,
@@ -69,6 +73,9 @@ module CNN_datapath #(
     output error,
     output ended,
     output go_next_filter,
+    output psum_buffer_valid,
+    output can_read_psum,
+    output psum_co,
 
     // buffers with outer modules:
     input [IFMAP_BUFFER_WIDTH-1:0] IFmap_buffer_in,

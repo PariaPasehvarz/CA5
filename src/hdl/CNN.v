@@ -27,6 +27,7 @@ module CNN #(
     input start,
     input [STRIDE_WIDTH-1:0] stride,
     input [FILTER_SIZE_WIDTH-1:0] filter_size,
+    input psum_mode,
 
     input [IFMAP_BUFFER_WIDTH - 1 : 0] IFmap_buffer_in,
     input IFmap_buffer_write_enable,
@@ -52,10 +53,13 @@ module CNN #(
     wire [1:0] stall;
     wire chip_en, global_rst,en_p_traverse, ren,ld_result, ld_IF;
     wire next_stride, done,next_filter, rst_stride,rst_stride_ended;
-    wire rst_result, rst_is_last_filter,rst_current_filter,rst_p_valid,make_empty;
+    wire rst_is_last_filter,rst_current_filter,rst_p_valid,make_empty;
     wire f_co,rst_f_counter,en_f_counter,go_next_stride;
     wire [FILTER_ADDR_WIDTH-1:0] filter_waddr;
     wire next_start, go_next_filter;
+    wire psum_buffer_valid, can_read_psum, psum_co;
+    wire first_time, psum_buffer_ren,next_psum_raddr, next_psum_waddr;
+
     main_controller #(.FILTER_ADDR_WIDTH(FILTER_ADDR_WIDTH)) main_controller_instance(
         .clk(clk),
         .reset(reset),
@@ -74,6 +78,10 @@ module CNN #(
         .go_next_stride(go_next_stride),
         .ended(ended),
         .go_next_filter(go_next_filter),
+        .psum_mode(psum_mode),
+        .psum_buffer_valid(psum_buffer_valid),
+        .can_read_psum(can_read_psum),
+        .psum_co(psum_co),
 
         .chip_en(chip_en),
         .global_rst(global_rst),
@@ -91,12 +99,15 @@ module CNN #(
         .rst_stride(rst_stride),
         .stall_signal(stall_signal),
         .rst_stride_ended(rst_stride_ended),
-        .rst_result(rst_result),
         .rst_is_last_filter(rst_is_last_filter),
         .rst_current_filter(rst_current_filter),
         .rst_p_valid(rst_p_valid),
         .make_empty(make_empty),
-        .next_start(next_start)
+        .next_start(next_start),
+        .first_time(first_time),
+        .psum_buffer_ren(psum_buffer_ren),
+        .next_psum_raddr(next_psum_raddr),
+        .next_psum_waddr(next_psum_waddr)
     );
 
     CNN_datapath #(
@@ -141,7 +152,6 @@ module CNN #(
     .next_filter(next_filter),
     .rst_stride(rst_stride),
     .rst_stride_ended(rst_stride_ended),
-    .rst_result(rst_result),
     .rst_is_last_filter(rst_is_last_filter),
     .rst_current_filter(rst_current_filter),
     .rst_p_valid(rst_p_valid),
@@ -149,6 +159,10 @@ module CNN #(
     .stride(stride),
     .filter_size(filter_size),
     .next_start(next_start),
+    .first_time(first_time),
+    .psum_buffer_ren(psum_buffer_ren),
+    .next_psum_raddr(next_psum_raddr),
+    .next_psum_waddr(next_psum_waddr)
 
     //outputs to be used in main controller:
     .IF_empty(IF_empty),
@@ -165,6 +179,9 @@ module CNN #(
     .error(error),
     .ended(ended),
     .go_next_filter(go_next_filter),
+    .psum_buffer_valid(psum_buffer_valid),
+    .can_read_psum(can_read_psum),
+    .psum_co(psum_co),
 
 
     // buffers with outer modules:
@@ -181,6 +198,7 @@ module CNN #(
     .result_buffer_out(result_buffer_out),
     .result_buffer_read_enable(result_buffer_read_enable),
     .result_buffer_valid(result_buffer_valid),
-    .result_buffer_empty(result_buffer_empty)
+    .result_buffer_empty(result_buffer_empty),
+    
 );
 endmodule
