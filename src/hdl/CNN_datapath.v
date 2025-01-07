@@ -501,7 +501,7 @@ module CNN_datapath #(
     multiplexer #(
         .WIDTH(PSUM_SPAD_WIDTH)
     ) Psum_multiplexer (
-        .in0(0),
+        .in0({PSUM_SPAD_WIDTH{1'b0}}),
         .in1(Psum_pad_out),
         .sel(reset_accumulation),
         .out(Psum_multiplexer_out)
@@ -518,22 +518,22 @@ module CNN_datapath #(
     );
 
     psum_address_generator_counter #(
-        .WIDTH(PSUM_PAD_LENGTH)
+        .WIDTH(PSUM_ADDR_WIDTH),
+        .MAX_COUNT(PSUM_PAD_LENGTH)
     ) psum_read_address_counter (
         .clk(clk),
         .rst(global_rst),
         .en(next_psum_raddr),
-        .Max_count(PSUM_PAD_LENGTH),
         .count(psum_raddr)
     );
 
     psum_address_generator_counter #(
-    .WIDTH(PSUM_PAD_LENGTH)
+        .WIDTH(PSUM_ADDR_WIDTH),
+        .MAX_COUNT(PSUM_PAD_LENGTH)
     ) psum_write_address_counter (
         .clk(clk),
         .rst(global_rst),
         .en(next_psum_waddr),
-        .Max_count(PSUM_PAD_LENGTH),
         .count(psum_waddr)
     );
 

@@ -1,17 +1,14 @@
-module psum_address_generator_counter #(parameter WIDTH = 8) (
+module psum_address_generator_counter #(parameter WIDTH = 8, parameter MAX_COUNT = 255) (
     input wire clk,
     input wire rst,
     input wire en,
-    input wire [WIDTH-1: 0] Max_count,
-    output reg [WIDTH-1:0] count
+    output reg [WIDTH-1: 0] count
 );
-
-    assign done = (count == Max_count);
 
     always @(posedge clk or posedge rst) begin
         if (rst) begin
             count <= 0;
-        end else if (en) begin
+        end else if (en && count < MAX_COUNT) begin
             count <= count + 1;
         end
     end

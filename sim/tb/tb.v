@@ -19,14 +19,16 @@ module tb();
     parameter IF_PAD_LENGTH = 12;
     parameter FILTER_PAD_LENGTH = 16;
     parameter FILTER_BUFFER_PAR_WRITE = 1;
+
     parameter RESULT_BUFFER_WIDTH = FILTER_BUFFER_WIDTH;
     parameter RESULT_BUFFER_PAR_READ = 1;
     parameter RESULT_BUFFER_COLUMNS = 64;
+    
     parameter ADD_OUT_WIDTH = RESULT_BUFFER_WIDTH;
     parameter MULT_WIDTH = IFMAP_BUFFER_WIDTH - 2 + FILTER_BUFFER_WIDTH;
     parameter I_WIDTH = 5;
 
-    parameter PSUM_ADDR_WIDTH = 16;
+    parameter PSUM_ADDR_WIDTH = 4;
     parameter PSUM_SPAD_WIDTH = 16;
     parameter PSUM_PAD_LENGTH = 16;
 
