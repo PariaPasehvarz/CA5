@@ -16,6 +16,10 @@ module main_controller #(parameter FILTER_ADDR_WIDTH) (
     input wire go_next_stride,
     input wire ended,
     input wire go_next_filter,
+    input wire psum_mode,
+    input wire psum_buffer_valid,
+    input wire can_read_psum,
+    input wire psum_co,
     
     output reg chip_en,
     output reg global_rst,     //internal reset for datapath
@@ -34,11 +38,14 @@ module main_controller #(parameter FILTER_ADDR_WIDTH) (
     output reg rst_stride,
     output reg stall_signal,
     output reg rst_stride_ended,
-    output reg rst_result,
     output reg rst_is_last_filter,
     output reg rst_current_filter,
     output reg rst_p_valid,
-    output reg make_empty
+    output reg make_empty,
+    output reg first_time,
+    output reg psum_buffer_ren,
+    output reg next_psum_raddr,
+    output reg next_psum_waddr
 );
 
     localparam [3:0] 
@@ -144,14 +151,16 @@ module main_controller #(parameter FILTER_ADDR_WIDTH) (
             end
 
             NEXT_PSUM_ADDR: begin
-                if (psum_mode) begin //TODO: add psum_mode input
+                if (psum_mode) begin
                     next_state = READ_REQ;
+                end else if begin
+                    next_state = STALL;
                 end else begin
                     next_state = PIPELINE_FULL;
                 end
             end
 
-            READ_REQ: begin //TODO: add psum_buffer_valid input
+            READ_REQ: begin
                 next_state = psum_buffer_valid ? WRITE_REQ : READ_REQ;
             end
 
@@ -167,9 +176,9 @@ module main_controller #(parameter FILTER_ADDR_WIDTH) (
     wire run_pipe;
     assign run_pipe = ~freeze & ~f_co;
     always @(*) begin
-        {first_time, psum_buffer_ren,next_psum_raddr,next_psum_waddr} = 0; //todo: add the outputs
+        {first_time, psum_buffer_ren,next_psum_raddr,next_psum_waddr} = 0;
         {en_f_counter,next_start, chip_en, global_rst,en_p_traverse,ren,ld_IF,mult_en,i_en,ld_result,rst_f_counter,next_stride,done,next_filter,
-        rst_stride,stall_signal,rst_stride_ended,rst_result,rst_is_last_filter,rst_current_filter,rst_p_valid,make_empty } = 0;
+        rst_stride,stall_signal,rst_stride_ended,rst_is_last_filter,rst_current_filter,rst_p_valid,make_empty } = 0;
 
         case (current_state)
 
@@ -229,7 +238,6 @@ module main_controller #(parameter FILTER_ADDR_WIDTH) (
 
             WAIT_FOR_WRITE: begin
                 chip_en = 1'b1;
-                //todo: remoce rst_Result
             end
 
             NEXT_IF: begin
@@ -255,11 +263,11 @@ module main_controller #(parameter FILTER_ADDR_WIDTH) (
                 rst_f_counter = 1'b1;
                 chip_en = 1'b1;
                 first_time = 1'b1;
-                next_psum_waddr = 1'b1; //TODO: not always can write, must stall
+                next_psum_waddr = 1'b1;
                 rst_stride_ended = !is_last_filter; //TODO: previously on wait_for_write, could cause problems, may need to be always 1
             end
             READ_REQ: begin
-                psum_buffer_ren = can_read_psum; //todo add can_read_psum
+                psum_buffer_ren = can_read_psum;
                 chip_en = 1'b1; 
             end
             ADD_NEXT: begin
