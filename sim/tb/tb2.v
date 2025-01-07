@@ -169,6 +169,7 @@ module tb();
 
     integer i;
     initial begin
+        psum_mode = 1'b1;
         #200;
         for (i = 0; i < 18; i = i+1) begin
             if (ifmap_write_or_skip[i] == write) begin
@@ -216,7 +217,6 @@ module tb();
     integer read_psum_index;
 
     initial begin
-        psum_mode = 1'b0;
         read_psum_index = 0;
         reset = 1;
         start = 0;
