@@ -19,7 +19,11 @@ module CNN #(
     parameter ADD_OUT_WIDTH = 8,            // RESULT_BUFFER_WIDTH
     parameter STRIDE_WIDTH = 8,             // We have it 
     parameter MULT_WIDTH = 8,               // RESULT_BUFFER_WIDTH
-    parameter I_WIDTH = 8                   // This is filter size, set it in testbench
+    parameter I_WIDTH = 8,                   // This is filter size, set it in testbench
+
+    parameter PSUM_ADDR_WIDTH = 16,
+    parameter PSUM_SPAD_WIDTH = 16,
+    parameter PSUM_PAD_LENGTH = 16
     
 ) (
     input clk,
@@ -31,13 +35,11 @@ module CNN #(
 
     input [IFMAP_BUFFER_WIDTH - 1 : 0] IFmap_buffer_in,
     input IFmap_buffer_write_enable,
-
-    input [FILTER_BUFFER_WIDTH - 1:0] filter_buffer_in,
-    input filter_buffer_write_enable,
-
     output IFmap_buffer_full,
     output IFmap_buffer_ready,
 
+    input [FILTER_BUFFER_WIDTH - 1:0] filter_buffer_in,
+    input filter_buffer_write_enable,
     output filter_buffer_full,
     output filter_buffer_ready,
 
@@ -162,7 +164,7 @@ module CNN #(
     .first_time(first_time),
     .psum_buffer_ren(psum_buffer_ren),
     .next_psum_raddr(next_psum_raddr),
-    .next_psum_waddr(next_psum_waddr)
+    .next_psum_waddr(next_psum_waddr),
 
     //outputs to be used in main controller:
     .IF_empty(IF_empty),
@@ -198,7 +200,7 @@ module CNN #(
     .result_buffer_out(result_buffer_out),
     .result_buffer_read_enable(result_buffer_read_enable),
     .result_buffer_valid(result_buffer_valid),
-    .result_buffer_empty(result_buffer_empty),
-    
+    .result_buffer_empty(result_buffer_empty)
 );
+
 endmodule

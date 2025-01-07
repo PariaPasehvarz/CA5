@@ -151,13 +151,12 @@ module main_controller #(parameter FILTER_ADDR_WIDTH) (
             end
 
             NEXT_PSUM_ADDR: begin
-                if (psum_mode) begin
+                if (psum_mode) 
                     next_state = READ_REQ;
-                end else if begin
+                else if (psum_co)
                     next_state = STALL;
-                end else begin
+                else
                     next_state = PIPELINE_FULL;
-                end
             end
 
             READ_REQ: begin

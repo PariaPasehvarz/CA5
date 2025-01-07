@@ -12,9 +12,10 @@ module CNN_datapath #(
     parameter IF_PAD_LENGTH = 32,
     parameter FILTER_PAD_LENGTH = 32,
     parameter ADD_OUT_WIDTH = 32,
-    parameter PSUM_ADDR_WIDTH = 32,
-    parameter PSUM_SPAD_WIDTH = 32,
-    parameter PSUM_PAD_LENGTH = 32,
+
+    parameter PSUM_ADDR_WIDTH = 16,
+    parameter PSUM_SPAD_WIDTH = 16,
+    parameter PSUM_PAD_LENGTH = 16,
 
     //IF buffer
     parameter IF_BUFFER_COLUMNS = 32,
@@ -42,22 +43,17 @@ module CNN_datapath #(
     input wire next_filter,
     input wire rst_stride,
     input wire rst_stride_ended,
-    input wire rst_result,
     input wire rst_is_last_filter,
     input wire rst_current_filter,
     input wire rst_p_valid,
     input wire make_empty,
     input wire [STRIDE_WIDTH-1:0] stride,
     input wire [FILTER_SIZE_WIDTH-1:0] filter_size,
-    input wire [PSUM_PAD_LENGTH-1:0] psum_size;
     input wire next_start,
     input wire first_time,
     input next_psum_waddr,
     input next_psum_raddr,
-    input first_time,
     input psum_buffer_ren,
-    input next_psum_raddr,
-    input next_psum_waddr,
     
     output IF_empty,
     output filter_cannot_read,
@@ -509,17 +505,17 @@ module CNN_datapath #(
         .in1(Psum_pad_out),
         .sel(reset_accumulation),
         .out(Psum_multiplexer_out)
-    )
+    );
 
     register #(
         .WIDTH(1)
-    ) reset_accumulation (
+    ) reset_accumulation_register (
         .clk(clk),
         .rst(global_rst),
         .load(1'b1),
         .data_in(first_time),
         .data_out(reset_accumulation)
-    )
+    );
 
     psum_address_generator_counter #(
         .WIDTH(PSUM_PAD_LENGTH)
@@ -527,9 +523,9 @@ module CNN_datapath #(
         .clk(clk),
         .rst(global_rst),
         .en(next_psum_raddr),
-        .Max_count(psum_size),
+        .Max_count(PSUM_PAD_LENGTH),
         .count(psum_raddr)
-    )
+    );
 
     psum_address_generator_counter #(
     .WIDTH(PSUM_PAD_LENGTH)
@@ -537,8 +533,8 @@ module CNN_datapath #(
         .clk(clk),
         .rst(global_rst),
         .en(next_psum_waddr),
-        .Max_count(psum_size),
+        .Max_count(PSUM_PAD_LENGTH),
         .count(psum_waddr)
-    )
+    );
 
 endmodule

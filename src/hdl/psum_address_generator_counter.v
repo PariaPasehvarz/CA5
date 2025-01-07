@@ -1,4 +1,4 @@
-module counter #(parameter WIDTH = 8) (
+module psum_address_generator_counter #(parameter WIDTH = 8) (
     input wire clk,
     input wire rst,
     input wire en,

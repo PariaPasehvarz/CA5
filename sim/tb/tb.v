@@ -26,6 +26,10 @@ module tb();
     parameter MULT_WIDTH = IFMAP_BUFFER_WIDTH - 2 + FILTER_BUFFER_WIDTH;
     parameter I_WIDTH = 5;
 
+    parameter PSUM_ADDR_WIDTH = 16;
+    parameter PSUM_SPAD_WIDTH = 16;
+    parameter PSUM_PAD_LENGTH = 16;
+
     // Testbench signals
     reg clk;
     reg reset;
@@ -39,6 +43,7 @@ module tb();
 
     reg [FILTER_BUFFER_WIDTH-1:0] filter_buffer_in;
     reg filter_buffer_write_enable;
+    reg psum_mode;
 
     wire IFmap_buffer_full;
     wire IFmap_buffer_ready;
@@ -69,7 +74,10 @@ module tb();
         .ADD_OUT_WIDTH(ADD_OUT_WIDTH),
         .STRIDE_WIDTH(STRIDE_WIDTH),
         .MULT_WIDTH(MULT_WIDTH),
-        .I_WIDTH(I_WIDTH)
+        .I_WIDTH(I_WIDTH),
+        .PSUM_ADDR_WIDTH(PSUM_ADDR_WIDTH),
+        .PSUM_PAD_LENGTH(PSUM_PAD_LENGTH),
+        .PSUM_SPAD_WIDTH(PSUM_SPAD_WIDTH)
     ) cnn (
     .clk(clk),
     .reset(reset),
@@ -77,6 +85,7 @@ module tb();
     .stride(stride),
     .filter_size(filter_size),
     .stall_signal(stall_signal),
+    .psum_mode(psum_mode),
 
     .IFmap_buffer_in(IFmap_buffer_in),
     .IFmap_buffer_full(IFmap_buffer_full),
@@ -157,8 +166,10 @@ module tb();
         filter_write_or_skip[16] = write;
         filter_write_or_skip[17] = write;
     end
+
     integer i;
     initial begin
+        psum_mode = 1'b1;
         #200;
         for (i = 0; i < 18; i = i+1) begin
             if (ifmap_write_or_skip[i] == write) begin
