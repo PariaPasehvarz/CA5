@@ -12,6 +12,9 @@ module CNN_datapath #(
     parameter IF_PAD_LENGTH = 32,
     parameter FILTER_PAD_LENGTH = 32,
     parameter ADD_OUT_WIDTH = 32,
+    parameter PSUM_ADDR_WIDTH = 32,
+    parameter PSUM_SPAD_WIDTH = 32,
+    parameter PSUM_PAD_LENGTH = 32,
 
     //IF buffer
     parameter IF_BUFFER_COLUMNS = 32,
@@ -46,7 +49,11 @@ module CNN_datapath #(
     input wire make_empty,
     input wire [STRIDE_WIDTH-1:0] stride,
     input wire [FILTER_SIZE_WIDTH-1:0] filter_size,
+    input wire [PSUM_PAD_LENGTH-1:0] psum_size;
     input wire next_start,
+    input wire first_time,
+    input next_psum_waddr,
+    input next_psum_raddr,
     
     output IF_empty,
     output filter_cannot_read,
@@ -93,9 +100,12 @@ module CNN_datapath #(
     wire [IF_ADDR_WIDTH-1:0] IF_raddr;
     wire update_end_ptr_out;
     wire [IFMAP_SPAD_WIDTH-1:0] IFmap_pad_out, IF_reg_out;
+    wire [PSUM_SPAD_WIDTH-1: 0] Psum_pad_out, Psum_multiplexer_out;
     wire [STRIDE_WIDTH-1:0] stride_step;
     wire [I_WIDTH-1:0] i_counter_out;
-    wire ep_valid;
+    wire ep_valid, reset_accumulation;
+    wire [PSUM_ADDR_WIDTH-1:0] psum_raddr;
+    wire [PSUM_ADDR_WIDTH-1:0] psum_waddr;
 
     if_read_buffer_controller if_read_buffer_controller_instance(
         .clk(clk),
@@ -411,7 +421,7 @@ module CNN_datapath #(
     wire result_buffer_write_enable,result_buffer_ready;
     wire [MULT_WIDTH-1:0] mult_out;
     wire [ADD_OUT_WIDTH-1:0] add_out;
-    wire [RESULT_BUFFER_WIDTH-1:0] result_reg_out;
+    // wire [RESULT_BUFFER_WIDTH-1:0] result_reg_out;
     write_buffer_controller write_buffer_controller_instance(
         .clk(clk),
         .rst(global_rst),
@@ -427,12 +437,12 @@ module CNN_datapath #(
         .COLUMNS(RESULT_BUFFER_COLUMNS),
         .PAR_WRITE(1),
         .PAR_READ(RESULT_BUFFER_PAR_READ)
-    ) Result_buffer(
+    ) Psum_buffer(
         .clk(clk),
         .rst(global_rst),
         .read_enable(result_buffer_read_enable),
         .write_enable(result_buffer_write_enable),
-        .din(result_reg_out),
+        .din(add_out),
         .dout(result_buffer_out),
         .valid(result_buffer_valid),
         .ready(result_buffer_ready),
@@ -440,22 +450,22 @@ module CNN_datapath #(
         .empty(result_buffer_empty)
     );
 
-    register  #(
-        .WIDTH(RESULT_BUFFER_WIDTH)
-    )ResultRegister(
-        .clk(clk),
-        .rst(global_rst | rst_result),
-        .load(ld_result),
-        .data_in(add_out),
-        .data_out(result_reg_out)
-    );
+    // register  #(
+    //     .WIDTH(RESULT_BUFFER_WIDTH)
+    // )ResultRegister(
+    //     .clk(clk),
+    //     .rst(global_rst | rst_result),
+    //     .load(ld_result),
+    //     .data_in(add_out),
+    //     .data_out(result_reg_out)
+    // );
 
     adder  #(
         .A_WIDTH(MULT_WIDTH),
         .B_WIDTH(RESULT_BUFFER_WIDTH)
     ) adder_instance(
         .a(mult_out),
-        .b(result_reg_out),
+        .b(Psum_multiplexer_out),           
         .sum(add_out)
     );
 
@@ -471,5 +481,57 @@ module CNN_datapath #(
         .prod(mult_out)
     );
 
+    register_file #(
+    .ADDR_WIDTH(PSUM_ADDR_WIDTH),
+    .DATA_WIDTH(PSUM_SPAD_WIDTH),
+    .REG_COUNT(PSUM_PAD_LENGTH)
+    ) Psum_scratch_pad (
+        .rst(global_rst),
+        .clk(clk),
+        .wen(ld_result),
+        .raddr(psum_raddr),      
+        .waddr(psum_waddr), 
+        .din(add_out),
+        .dout(Psum_pad_out)
+    );
+
+    multiplexer #(
+        .WIDTH(PSUM_SPAD_WIDTH)
+    ) Psum_multiplexer (
+        .in0(0),
+        .in1(Psum_pad_out),
+        .sel(reset_accumulation),
+        .out(Psum_multiplexer_out)
+    )
+
+    register #(
+        .WIDTH(1)
+    ) reset_accumulation (
+        .clk(clk),
+        .rst(global_rst),
+        .load(1'b1),
+        .data_in(first_time),
+        .data_out(reset_accumulation)
+    )
+
+    psum_address_generator_counter #(
+        .WIDTH(PSUM_PAD_LENGTH)
+    ) psum_read_address_counter (
+        .clk(clk),
+        .rst(global_rst),
+        .en(next_psum_raddr),
+        .Max_count(psum_size),
+        .count(psum_raddr)
+    )
+
+    psum_address_generator_counter #(
+    .WIDTH(PSUM_PAD_LENGTH)
+    ) psum_write_address_counter (
+        .clk(clk),
+        .rst(global_rst),
+        .en(next_psum_waddr),
+        .Max_count(psum_size),
+        .count(psum_waddr)
+    )
 
 endmodule
