@@ -16,6 +16,9 @@ module CNN #(
     parameter RESULT_BUFFER_PAR_READ = 8,
     parameter RESULT_BUFFER_COLUMNS = 8,    // FILTER_BUFFER_COLUMNS -> Num of rows
 
+    parameter PSUM_BUFFER_WIDTH = 8,
+    parameter PSUM_BUFFER_COLUMNS = 8,
+
     parameter ADD_OUT_WIDTH = 8,            // RESULT_BUFFER_WIDTH
     parameter STRIDE_WIDTH = 8,             // We have it 
     parameter MULT_WIDTH = 8,               // RESULT_BUFFER_WIDTH
@@ -43,6 +46,10 @@ module CNN #(
     output filter_buffer_full,
     output filter_buffer_ready,
 
+    input [PSUM_BUFFER_WIDTH-1:0] psum_buffer_in,
+    input psum_buffer_wen,
+    output psum_buffer_ready,
+
     output stall_signal,
     output [RESULT_BUFFER_WIDTH-1:0] result_buffer_out,
     output result_buffer_empty,
@@ -59,7 +66,7 @@ module CNN #(
     wire f_co,rst_f_counter,en_f_counter,go_next_stride;
     wire [FILTER_ADDR_WIDTH-1:0] filter_waddr;
     wire next_start, go_next_filter;
-    wire psum_buffer_valid, can_read_psum, psum_co;
+    wire psum_buffer_valid, can_read_psum, psum_w_co;
     wire first_time, psum_buffer_ren,next_psum_raddr, next_psum_waddr;
 
     main_controller #(.FILTER_ADDR_WIDTH(FILTER_ADDR_WIDTH)) main_controller_instance(
@@ -83,7 +90,7 @@ module CNN #(
         .psum_mode(psum_mode),
         .psum_buffer_valid(psum_buffer_valid),
         .can_read_psum(can_read_psum),
-        .psum_co(psum_co),
+        .psum_w_co(psum_w_co),
 
         .chip_en(chip_en),
         .global_rst(global_rst),
@@ -118,6 +125,8 @@ module CNN #(
     .IFMAP_SPAD_WIDTH(IFMAP_BUFFER_WIDTH - 2),
     .FILTER_WIDTH(FILTER_BUFFER_WIDTH),
     .RESULT_BUFFER_WIDTH(RESULT_BUFFER_WIDTH),
+    .PSUM_BUFFER_WIDTH(PSUM_BUFFER_WIDTH),
+    .PSUM_BUFFER_COLUMNS(PSUM_BUFFER_COLUMNS),
     .MULT_WIDTH(MULT_WIDTH),
     .STRIDE_WIDTH(STRIDE_WIDTH),
     .I_WIDTH(I_WIDTH),
@@ -169,6 +178,7 @@ module CNN #(
     .psum_buffer_ren(psum_buffer_ren),
     .next_psum_raddr(next_psum_raddr),
     .next_psum_waddr(next_psum_waddr),
+    .psum_mode(psum_mode),
 
     //outputs to be used in main controller:
     .IF_empty(IF_empty),
@@ -187,7 +197,7 @@ module CNN #(
     .go_next_filter(go_next_filter),
     .psum_buffer_valid(psum_buffer_valid),
     .can_read_psum(can_read_psum),
-    .psum_co(psum_co),
+    .psum_w_co(psum_w_co),
 
 
     // buffers with outer modules:
@@ -204,7 +214,11 @@ module CNN #(
     .result_buffer_out(result_buffer_out),
     .result_buffer_read_enable(result_buffer_read_enable),
     .result_buffer_valid(result_buffer_valid),
-    .result_buffer_empty(result_buffer_empty)
+    .result_buffer_empty(result_buffer_empty),
+
+    .psum_buffer_in(psum_buffer_in),
+    .psum_buffer_wen(psum_buffer_wen),
+    .psum_buffer_ready(psum_buffer_ready)
 );
 
 endmodule

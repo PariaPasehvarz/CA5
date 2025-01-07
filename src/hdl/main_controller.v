@@ -19,7 +19,7 @@ module main_controller #(parameter FILTER_ADDR_WIDTH) (
     input wire psum_mode,
     input wire psum_buffer_valid,
     input wire can_read_psum,
-    input wire psum_co,
+    input wire psum_w_co,
     
     output reg chip_en,
     output reg global_rst,     //internal reset for datapath
@@ -153,7 +153,7 @@ module main_controller #(parameter FILTER_ADDR_WIDTH) (
             NEXT_PSUM_ADDR: begin
                 if (psum_mode) 
                     next_state = READ_REQ;
-                else if (psum_co)
+                else if (psum_w_co)
                     next_state = STALL;
                 else
                     next_state = PIPELINE_FULL;

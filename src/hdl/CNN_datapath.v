@@ -3,6 +3,8 @@ module CNN_datapath #(
     parameter IFMAP_SPAD_WIDTH = 6,
     parameter FILTER_WIDTH = 8,
     parameter RESULT_BUFFER_WIDTH = 8,
+    parameter PSUM_BUFFER_WIDTH = 8,
+    parameter PSUM_BUFFER_COLUMNS = 8,
     parameter MULT_WIDTH = IFMAP_SPAD_WIDTH + FILTER_WIDTH,
     parameter STRIDE_WIDTH = 3,
     parameter I_WIDTH = 5,
@@ -54,6 +56,7 @@ module CNN_datapath #(
     input next_psum_waddr,
     input next_psum_raddr,
     input psum_buffer_ren,
+    input psum_mode,
     
     output IF_empty,
     output filter_cannot_read,
@@ -71,7 +74,7 @@ module CNN_datapath #(
     output go_next_filter,
     output psum_buffer_valid,
     output can_read_psum,
-    output psum_co,
+    output psum_w_co,
 
     // buffers with outer modules:
     input [IFMAP_BUFFER_WIDTH-1:0] IFmap_buffer_in,
@@ -87,7 +90,11 @@ module CNN_datapath #(
     output [RESULT_BUFFER_WIDTH-1:0] result_buffer_out,
     input result_buffer_read_enable,
     output result_buffer_valid,
-    output result_buffer_empty
+    output result_buffer_empty,
+
+    input [PSUM_BUFFER_WIDTH-1:0] psum_buffer_in,
+    input psum_buffer_wen,
+    output psum_buffer_ready
 );
     //if section
     wire [IFMAP_BUFFER_WIDTH-1:0] IFmap_buffer_out;
@@ -440,7 +447,7 @@ module CNN_datapath #(
         .COLUMNS(RESULT_BUFFER_COLUMNS),
         .PAR_WRITE(1),
         .PAR_READ(RESULT_BUFFER_PAR_READ)
-    ) Psum_buffer(
+    ) Result_buffer(
         .clk(clk),
         .rst(global_rst),
         .read_enable(result_buffer_read_enable),
@@ -463,11 +470,13 @@ module CNN_datapath #(
     //     .data_out(result_reg_out)
     // );
 
+    wire [PSUM_BUFFER_WIDTH-1:0] psum_buffer_out;
+
     adder  #(
         .A_WIDTH(MULT_WIDTH),
         .B_WIDTH(RESULT_BUFFER_WIDTH)
     ) adder_instance(
-        .a(mult_out),
+        .a(psum_mode ? psum_buffer_out : mult_out),
         .b(Psum_multiplexer_out),           
         .sum(add_out)
     );
@@ -482,6 +491,26 @@ module CNN_datapath #(
         .a(filter_sram_out),
         .b(IF_reg_out),
         .prod(mult_out)
+    );
+
+    //psum section
+    wire psum_buffer_empty, psum_buffer_full; //not used
+    circular_buffer #(
+        .ROW_SIZE(PSUM_BUFFER_WIDTH),
+        .COLUMNS(PSUM_BUFFER_COLUMNS),
+        .PAR_WRITE(1),
+        .PAR_READ(1)
+    ) psum_buffer(
+        .clk(clk),
+        .rst(global_rst),
+        .read_enable(psum_buffer_ren),
+        .write_enable(psum_buffer_wen),
+        .din(psum_buffer_in),
+        .dout(psum_buffer_out),
+        .valid(psum_buffer_valid),
+        .ready(psum_buffer_ready),
+        .full(psum_buffer_full),
+        .empty(psum_buffer_empty)
     );
 
     register_file #(
@@ -501,8 +530,8 @@ module CNN_datapath #(
     multiplexer #(
         .WIDTH(PSUM_SPAD_WIDTH)
     ) Psum_multiplexer (
-        .in0({PSUM_SPAD_WIDTH{1'b0}}),
-        .in1(Psum_pad_out),
+        .in0(Psum_pad_out),
+        .in1({PSUM_SPAD_WIDTH{1'b0}}),
         .sel(reset_accumulation),
         .out(Psum_multiplexer_out)
     );
@@ -517,24 +546,34 @@ module CNN_datapath #(
         .data_out(reset_accumulation)
     );
 
-    psum_address_generator_counter #(
+    wire psum_r_co; //not used
+
+    filter_write_counter #( //ignore the module name, we need this type of counter
         .WIDTH(PSUM_ADDR_WIDTH),
-        .MAX_COUNT(PSUM_PAD_LENGTH)
+        .MAX(PSUM_PAD_LENGTH - 1)
     ) psum_read_address_counter (
         .clk(clk),
         .rst(global_rst),
-        .en(next_psum_raddr),
-        .count(psum_raddr)
+        .count_en(next_psum_raddr),
+        .count(psum_raddr),
+        .carry_out(psum_r_co)
     );
 
-    psum_address_generator_counter #(
+    filter_write_counter #(//ignore the module name, we need this type of counter
         .WIDTH(PSUM_ADDR_WIDTH),
-        .MAX_COUNT(PSUM_PAD_LENGTH)
+        .MAX(PSUM_PAD_LENGTH - 1)
     ) psum_write_address_counter (
         .clk(clk),
         .rst(global_rst),
-        .en(next_psum_waddr),
-        .count(psum_waddr)
+        .count_en(next_psum_waddr),
+        .count(psum_waddr),
+        .carry_out(psum_w_co)
+    );
+
+    can_read_psum_detector #(.ADDR_WIDTH(PSUM_ADDR_WIDTH)) can_read_psum_detector_inst (
+        .raddr(psum_raddr),
+        .waddr(psum_waddr),
+        .can_read_psum(can_read_psum)
     );
 
 endmodule

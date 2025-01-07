@@ -9,7 +9,7 @@ module tb();
     parameter STRIDE_WIDTH = 5;
     parameter IF_BUFFER_COLUMNS = 12;
     parameter FILTER_BUFFER_COLUMNS = 16;
-    
+
     // Calculated parameters
     parameter IF_ADDR_WIDTH = $clog2(IFMAP_BUFFER_WIDTH - 2);          // $clog2(IFMAP_BUFFER_WIDTH - 2)
     parameter FILTER_ADDR_WIDTH = $clog2(FILTER_BUFFER_WIDTH);         // $clog2(FILTER_BUFFER_WIDTH)
@@ -28,9 +28,12 @@ module tb();
     parameter MULT_WIDTH = IFMAP_BUFFER_WIDTH - 2 + FILTER_BUFFER_WIDTH;
     parameter I_WIDTH = 5;
 
-    parameter PSUM_ADDR_WIDTH = 4;
     parameter PSUM_SPAD_WIDTH = 16;
     parameter PSUM_PAD_LENGTH = 16;
+    parameter PSUM_ADDR_WIDTH = $clog2(PSUM_PAD_LENGTH);
+
+    parameter PSUM_BUFFER_WIDTH = RESULT_BUFFER_WIDTH;
+    parameter PSUM_BUFFER_COLUMNS = 16; //from test cases
 
     // Testbench signals
     reg clk;
@@ -57,6 +60,10 @@ module tb();
     wire result_buffer_valid;
     reg result_buffer_read_enable;
 
+    reg [PSUM_BUFFER_WIDTH-1:0] psum_buffer_in;
+    wire psum_buffer_ready;
+    reg psum_buffer_wen;
+
     // Instantiate CNN module
     CNN #(
         .IFMAP_BUFFER_WIDTH(IFMAP_BUFFER_WIDTH),
@@ -79,7 +86,9 @@ module tb();
         .I_WIDTH(I_WIDTH),
         .PSUM_ADDR_WIDTH(PSUM_ADDR_WIDTH),
         .PSUM_PAD_LENGTH(PSUM_PAD_LENGTH),
-        .PSUM_SPAD_WIDTH(PSUM_SPAD_WIDTH)
+        .PSUM_SPAD_WIDTH(PSUM_SPAD_WIDTH),
+        .PSUM_BUFFER_WIDTH(PSUM_BUFFER_WIDTH),
+        .PSUM_BUFFER_COLUMNS(PSUM_BUFFER_COLUMNS)
     ) cnn (
     .clk(clk),
     .reset(reset),
@@ -102,7 +111,11 @@ module tb();
     .result_buffer_out(result_buffer_out),
     .result_buffer_empty(result_buffer_empty),
     .result_buffer_valid(result_buffer_valid),
-    .result_buffer_read_enable(result_buffer_read_enable)
+    .result_buffer_read_enable(result_buffer_read_enable),
+
+    .psum_buffer_in(psum_buffer_in),
+    .psum_buffer_wen(psum_buffer_wen),
+    .psum_buffer_ready(psum_buffer_ready)
     );
 
     // Clock generation
@@ -219,6 +232,8 @@ module tb();
 
     initial begin
         psum_mode = 1'b0;
+        psum_buffer_in = 0;
+        psum_buffer_wen = 1'b0;
         read_psum_index = 0;
         reset = 1;
         start = 0;
