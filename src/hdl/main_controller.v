@@ -45,7 +45,8 @@ module main_controller #(parameter FILTER_ADDR_WIDTH) (
     output reg first_time,
     output reg psum_buffer_ren,
     output reg next_psum_raddr,
-    output reg next_psum_waddr
+    output reg next_psum_waddr,
+    output reg rst_psum_raddr
 );
 
     localparam [3:0] 
@@ -175,7 +176,7 @@ module main_controller #(parameter FILTER_ADDR_WIDTH) (
     wire run_pipe;
     assign run_pipe = ~freeze & ~f_co;
     always @(*) begin
-        {first_time, psum_buffer_ren,next_psum_raddr,next_psum_waddr} = 0;
+        {first_time, psum_buffer_ren,next_psum_raddr,next_psum_waddr, rst_psum_raddr} = 0;
         {en_f_counter,next_start, chip_en, global_rst,en_p_traverse,ren,ld_IF,mult_en,i_en,ld_result,rst_f_counter,next_stride,done,next_filter,
         rst_stride,stall_signal,rst_stride_ended,rst_is_last_filter,rst_current_filter,rst_p_valid,make_empty } = 0;
 
@@ -264,6 +265,8 @@ module main_controller #(parameter FILTER_ADDR_WIDTH) (
                 first_time = 1'b1;
                 next_psum_waddr = 1'b1;
                 rst_stride_ended = !is_last_filter; //TODO: previously on wait_for_write, could cause problems, may need to be always 1
+                next_psum_raddr = !psum_mode;
+                rst_psum_raddr = psum_mode;
             end
             READ_REQ: begin
                 psum_buffer_ren = can_read_psum;

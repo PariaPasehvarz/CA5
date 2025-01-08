@@ -57,6 +57,7 @@ module CNN_datapath #(
     input next_psum_raddr,
     input psum_buffer_ren,
     input psum_mode,
+    input rst_psum_raddr,
     
     output IF_empty,
     output filter_cannot_read,
@@ -553,7 +554,7 @@ module CNN_datapath #(
         .MAX(PSUM_PAD_LENGTH - 1)
     ) psum_read_address_counter (
         .clk(clk),
-        .rst(global_rst),
+        .rst(global_rst | rst_psum_raddr),
         .count_en(next_psum_raddr),
         .count(psum_raddr),
         .carry_out(psum_r_co)

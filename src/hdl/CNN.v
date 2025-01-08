@@ -68,6 +68,7 @@ module CNN #(
     wire next_start, go_next_filter;
     wire psum_buffer_valid, can_read_psum, psum_w_co;
     wire first_time, psum_buffer_ren,next_psum_raddr, next_psum_waddr;
+    wire rst_psum_raddr;
 
     main_controller #(.FILTER_ADDR_WIDTH(FILTER_ADDR_WIDTH)) main_controller_instance(
         .clk(clk),
@@ -116,7 +117,8 @@ module CNN #(
         .first_time(first_time),
         .psum_buffer_ren(psum_buffer_ren),
         .next_psum_raddr(next_psum_raddr),
-        .next_psum_waddr(next_psum_waddr)
+        .next_psum_waddr(next_psum_waddr),
+        .rst_psum_raddr(rst_psum_raddr)
     );
 
     CNN_datapath #(
@@ -179,6 +181,7 @@ module CNN #(
     .next_psum_raddr(next_psum_raddr),
     .next_psum_waddr(next_psum_waddr),
     .psum_mode(psum_mode),
+    .rst_psum_raddr(rst_psum_raddr),
 
     //outputs to be used in main controller:
     .IF_empty(IF_empty),
