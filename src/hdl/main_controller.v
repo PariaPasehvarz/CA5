@@ -65,7 +65,6 @@ module main_controller #(parameter FILTER_ADDR_WIDTH) (
         WAIT_FOR_WRITE     = 4'd12,
         STALL              = 4'd13,
         ADD_NEXT           = 4'd14;
-        
 
     reg [3:0] current_state;
     reg [3:0] next_state;
