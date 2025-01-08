@@ -126,21 +126,26 @@ module tb();
 
     parameter input_if_count = 16;
     parameter input_filter_count = 16;
+    parameter input_psum_count = 16;
 
     reg [IFMAP_BUFFER_WIDTH-1:0] ifmaps [0:input_if_count-1];
     reg [FILTER_BUFFER_WIDTH-1:0] filters [0:input_filter_count-1];
+    reg [PSUM_BUFFER_WIDTH-1: 0] psums [0:input_psum_count-1];
     integer write = 1, skip = 0;
 
     integer ifmap_write_index;
     integer ifmap_write_or_skip [17:0]; //of size excel file rows excluding first row 
     integer filter_write_index;
     integer filter_write_or_skip [17:0];
+    integer psums_write_index;
 
     initial begin
         $readmemb("./file/test_1_filter.txt", filters);
         $readmemb("./file/test_1_ifmap.txt", ifmaps);
+        $readmemb("./file/test_1_psum.txt", psums);
         ifmap_write_index = 0;
         filter_write_index = 0;
+        psums_write_index = 0;
 
         ifmap_write_or_skip[0] = write;
         ifmap_write_or_skip[1] = write;
@@ -184,6 +189,20 @@ module tb();
 
     integer i;
     initial begin
+        for (i = 0; i < 16; i = i+1) begin
+            psum_buffer_wen = 1;
+            psum_buffer_in = psums[psums_write_index];
+            while (psum_buffer_ready == 0) begin
+                #(`CLK_HALF);
+            end
+            #(`CLK + `CLK_HALF);
+            psums_write_index = psums_write_index + 1;
+            #(`CLK);
+        end
+        psum_buffer_wen = 0;
+    end
+
+    initial begin
         #200;
         for (i = 0; i < 18; i = i+1) begin
             if (ifmap_write_or_skip[i] == write) begin
@@ -195,7 +214,7 @@ module tb();
                 //$display("write ifmap index %d, value %b", ifmap_write_index, ifmaps[ifmap_write_index]);
                 #(`CLK + `CLK_HALF);
                 IFmap_buffer_write_enable = 0;
-                ifmap_write_index = ifmap_write_index +1;
+                ifmap_write_index = ifmap_write_index + 1;
                 #(`CLK);
             end else begin
                 //$display("===== skip %d", i);
