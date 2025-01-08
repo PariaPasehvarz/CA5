@@ -29,11 +29,11 @@ module tb();
     parameter I_WIDTH = 5;
 
     parameter PSUM_SPAD_WIDTH = 16;
-    parameter PSUM_PAD_LENGTH = 16;
+    parameter PSUM_PAD_LENGTH = 17; //from test cases
     parameter PSUM_ADDR_WIDTH = $clog2(PSUM_PAD_LENGTH);
 
     parameter PSUM_BUFFER_WIDTH = RESULT_BUFFER_WIDTH;
-    parameter PSUM_BUFFER_COLUMNS = 16; //from test cases
+    parameter PSUM_BUFFER_COLUMNS = 16;
 
     // Testbench signals
     reg clk;
