@@ -294,7 +294,7 @@ module tb();
         end*/
         
         psum_mode = 1'b1;
-        #(50 *`CLK);
+        #(200 *`CLK);
 
         $stop;
     end
