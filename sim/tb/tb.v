@@ -142,7 +142,7 @@ module tb();
     initial begin
         $readmemb("./file/test_1_filter.txt", filters);
         $readmemb("./file/test_1_ifmap.txt", ifmaps);
-        $readmemb("./file/test_1_psum.txt", psums);
+        $readmemb("./file/test_1_psum_input.txt", psums);
         ifmap_write_index = 0;
         filter_write_index = 0;
         psums_write_index = 0;
