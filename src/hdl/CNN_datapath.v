@@ -432,7 +432,7 @@ module CNN_datapath #(
     wire result_buffer_write_enable,result_buffer_ready;
     wire [MULT_WIDTH-1:0] mult_out;
     wire [ADD_OUT_WIDTH-1:0] add_out;
-    // wire [RESULT_BUFFER_WIDTH-1:0] result_reg_out;
+
     write_buffer_controller write_buffer_controller_instance(
         .clk(clk),
         .rst(global_rst),
@@ -549,7 +549,7 @@ module CNN_datapath #(
 
     wire psum_r_co; //not used
 
-    filter_write_counter #( //ignore the module name, we need this type of counter
+    filter_write_counter #(     //ignore the module name, we need this type of counter
         .WIDTH(PSUM_ADDR_WIDTH),
         .MAX(PSUM_PAD_LENGTH - 1)
     ) psum_read_address_counter (
@@ -560,7 +560,7 @@ module CNN_datapath #(
         .carry_out(psum_r_co)
     );
 
-    filter_write_counter #(//ignore the module name, we need this type of counter
+    filter_write_counter #(     //ignore the module name, we need this type of counter
         .WIDTH(PSUM_ADDR_WIDTH),
         .MAX(PSUM_PAD_LENGTH - 1)
     ) psum_write_address_counter (

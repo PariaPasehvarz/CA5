@@ -189,6 +189,7 @@ module tb();
 
     integer i;
     initial begin
+        #200;
         for (i = 0; i < 16; i = i+1) begin
             psum_buffer_wen = 1;
             psum_buffer_in = psums[psums_write_index];
@@ -283,13 +284,15 @@ module tb();
 
         // Wait for processing
         #4000;
-        for(read_psum_index = 0; read_psum_index < 16;read_psum_index = read_psum_index + 1) begin
+        for(read_psum_index = 0; read_psum_index < 16; read_psum_index = read_psum_index + 1) begin
             result_buffer_read_enable = 1;
             #(5 * `CLK);
             result_buffer_read_enable = 0;
             #(2 * `CLK);
         end
         
+        psum_mode = 1'b1;
+        #(50 *`CLK);
 
         $stop;
     end
