@@ -20,6 +20,8 @@ module main_controller #(parameter FILTER_ADDR_WIDTH) (
     input wire psum_buffer_valid,
     input wire can_read_psum,
     input wire psum_w_co,
+    input interleaved_mode,
+    input is_second_filter,
     
     output reg chip_en,
     output reg global_rst,     //internal reset for datapath
@@ -46,7 +48,9 @@ module main_controller #(parameter FILTER_ADDR_WIDTH) (
     output reg psum_buffer_ren,
     output reg next_psum_raddr,
     output reg next_psum_waddr,
-    output reg rst_psum_raddr
+    output reg rst_psum_raddr,
+    output reg toggle_filter,
+    output reg rst_toggle_filter
 );
 
     localparam [3:0] 
@@ -177,6 +181,7 @@ module main_controller #(parameter FILTER_ADDR_WIDTH) (
     assign run_pipe = ~freeze & ~f_co;
     always @(*) begin
         {first_time, psum_buffer_ren,next_psum_raddr,next_psum_waddr, rst_psum_raddr} = 0;
+        {toggle_filter, rst_toggle_filter} = 0;
         {en_f_counter,next_start, chip_en, global_rst,en_p_traverse,ren,ld_IF,mult_en,i_en,ld_result,rst_f_counter,next_stride,done,next_filter,
         rst_stride,stall_signal,rst_stride_ended,rst_is_last_filter,rst_current_filter,rst_p_valid,make_empty } = 0;
 
@@ -223,11 +228,12 @@ module main_controller #(parameter FILTER_ADDR_WIDTH) (
                 mult_en = run_pipe;
                 ren = run_pipe;
                 en_f_counter = run_pipe;
-                next_stride = run_pipe & !stride_ended & !ended & go_next_stride;
-                next_filter = !freeze & go_next_filter;
-                rst_stride = !freeze & go_next_filter;
+                next_stride = run_pipe & !stride_ended & !ended & (interleaved_mode ? (is_second_filter & go_next_stride): go_next_stride);
+                next_filter = !freeze & (interleaved_mode ? (is_second_filter & go_next_filter) : go_next_filter);
+                rst_stride = !freeze & (interleaved_mode ? (is_second_filter & go_next_filter) : go_next_filter);
                 first_time = run_pipe ? 0 :first_time;
                 rst_psum_raddr = psum_mode;
+                toggle_filter = ~freeze & go_next_stride;
             end
 
             WRITE_REQ: begin
@@ -251,6 +257,7 @@ module main_controller #(parameter FILTER_ADDR_WIDTH) (
                 rst_stride_ended = 1'b1;
                 make_empty = 1'b1;
                 rst_stride = 1'b1;
+                rst_toggle_filter = 1'b1;
             end
 
             STALL: begin

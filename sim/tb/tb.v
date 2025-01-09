@@ -49,6 +49,7 @@ module tb();
     reg [FILTER_BUFFER_WIDTH-1:0] filter_buffer_in;
     reg filter_buffer_write_enable;
     reg psum_mode;
+    reg interleaved_mode;
 
     wire IFmap_buffer_full;
     wire IFmap_buffer_ready;
@@ -97,6 +98,7 @@ module tb();
     .filter_size(filter_size),
     .stall_signal(stall_signal),
     .psum_mode(psum_mode),
+    .interleaved_mode(interleaved_mode),
 
     .IFmap_buffer_in(IFmap_buffer_in),
     .IFmap_buffer_full(IFmap_buffer_full),
@@ -263,6 +265,7 @@ module tb();
 
     initial begin
         psum_mode = 1'b0;
+        interleaved_mode = 1'b0;
         psum_buffer_in = 0;
         psum_buffer_wen = 1'b0;
         read_psum_index = 0;

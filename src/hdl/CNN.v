@@ -54,7 +54,8 @@ module CNN #(
     output [RESULT_BUFFER_WIDTH-1:0] result_buffer_out,
     output result_buffer_empty,
     output result_buffer_valid,
-    input result_buffer_read_enable
+    input result_buffer_read_enable,
+    input interleaved_mode
 );
 
     wire IF_empty, filter_cannot_read ,sp_valid, ended;
@@ -69,6 +70,7 @@ module CNN #(
     wire psum_buffer_valid, can_read_psum, psum_w_co;
     wire first_time, psum_buffer_ren,next_psum_raddr, next_psum_waddr;
     wire rst_psum_raddr;
+    wire is_second_filter, toggle_filter, rst_toggle_filter;
 
     main_controller #(.FILTER_ADDR_WIDTH(FILTER_ADDR_WIDTH)) main_controller_instance(
         .clk(clk),
@@ -92,6 +94,8 @@ module CNN #(
         .psum_buffer_valid(psum_buffer_valid),
         .can_read_psum(can_read_psum),
         .psum_w_co(psum_w_co),
+        .interleaved_mode(interleaved_mode),
+        .is_second_filter(is_second_filter),
 
         .chip_en(chip_en),
         .global_rst(global_rst),
@@ -118,7 +122,9 @@ module CNN #(
         .psum_buffer_ren(psum_buffer_ren),
         .next_psum_raddr(next_psum_raddr),
         .next_psum_waddr(next_psum_waddr),
-        .rst_psum_raddr(rst_psum_raddr)
+        .rst_psum_raddr(rst_psum_raddr),
+        .toggle_filter(toggle_filter),
+        .rst_toggle_filter(rst_toggle_filter)
     );
 
     CNN_datapath #(
@@ -182,6 +188,9 @@ module CNN #(
     .next_psum_waddr(next_psum_waddr),
     .psum_mode(psum_mode),
     .rst_psum_raddr(rst_psum_raddr),
+    .interleaved_mode(interleaved_mode),
+    .toggle_filter(toggle_filter),
+    .rst_toggle_filter(rst_toggle_filter),
 
     //outputs to be used in main controller:
     .IF_empty(IF_empty),
@@ -201,6 +210,7 @@ module CNN #(
     .psum_buffer_valid(psum_buffer_valid),
     .can_read_psum(can_read_psum),
     .psum_w_co(psum_w_co),
+    .is_second_filter(is_second_filter),
 
 
     // buffers with outer modules:

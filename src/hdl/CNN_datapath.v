@@ -58,6 +58,9 @@ module CNN_datapath #(
     input psum_buffer_ren,
     input psum_mode,
     input rst_psum_raddr,
+    input interleaved_mode,
+    input rst_toggle_filter,
+    input toggle_filter,
     
     output IF_empty,
     output filter_cannot_read,
@@ -76,6 +79,7 @@ module CNN_datapath #(
     output psum_buffer_valid,
     output can_read_psum,
     output psum_w_co,
+    output is_second_filter,
 
     // buffers with outer modules:
     input [IFMAP_BUFFER_WIDTH-1:0] IFmap_buffer_in,
@@ -137,6 +141,13 @@ module CNN_datapath #(
     );
 
     go_next_filter #(.ADDR_WIDTH(IF_ADDR_WIDTH)) go_next_filter_inst(.rst(global_rst),.clk(clk),.ep_valid(ep_valid),.read_addr(IF_raddr),.end_ptr(end_ptr), .go_next_filter(go_next_filter));
+    
+    toggle_reg is_second_filter_reg(
+        .clk(clk),
+        .rst(global_rst | rst_toggle_filter),
+        .toggle(toggle_filter),
+        .out(is_second_filter)
+    );
 
     wire IFmap_buffer_empty; // not used
 
@@ -392,6 +403,8 @@ module CNN_datapath #(
     ) FilterReadAddressGenerator_instance (
         .current_filter_start_addr(current_filter_start_addr),
         .i(i_counter_out),
+        .interleaved_mode(interleaved_mode),
+        .is_second_filter(is_second_filter),
         .read_addr(filter_raddr)
     );
 
@@ -403,6 +416,7 @@ module CNN_datapath #(
         .rst(global_rst | rst_current_filter),
         .next_filter(next_filter),
         .filter_size(filter_size),
+        .interleaved_mode(interleaved_mode),
         .current_filter_start_addr(current_filter_start_addr)
     );
 

@@ -56,6 +56,7 @@
 	vlog 	+acc -incr -source  +define+SIM 	$hdl_path/end_detector.v
 	vlog 	+acc -incr -source  +define+SIM 	$hdl_path/go_next_filter.v
 	vlog 	+acc -incr -source  +define+SIM 	$hdl_path/multiplexer.v
+	vlog 	+acc -incr -source  +define+SIM 	$hdl_path/toggle_reg.v
 	vlog 	+acc -incr -source  +define+SIM 	$hdl_path/can_read_psum_detector.v
 	vlog 	+acc -incr -source  +incdir+$inc_path +define+SIM 	./tb/$TB.v
 	onerror {break}
