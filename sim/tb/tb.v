@@ -197,6 +197,7 @@ module tb();
                 #(`CLK_HALF);
             end
             #(`CLK + `CLK_HALF);
+            psum_buffer_wen = 0;
             psums_write_index = psums_write_index + 1;
             #(`CLK);
         end
@@ -284,12 +285,12 @@ module tb();
 
         // Wait for processing
         #4000;
-        for(read_psum_index = 0; read_psum_index < 16; read_psum_index = read_psum_index + 1) begin
+        /*for(read_psum_index = 0; read_psum_index < 16; read_psum_index = read_psum_index + 1) begin
             result_buffer_read_enable = 1;
             #(5 * `CLK);
             result_buffer_read_enable = 0;
             #(2 * `CLK);
-        end
+        end*/
         
         psum_mode = 1'b1;
         #(50 *`CLK);

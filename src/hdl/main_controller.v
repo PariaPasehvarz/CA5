@@ -267,6 +267,7 @@ module main_controller #(parameter FILTER_ADDR_WIDTH) (
                 next_psum_waddr = 1'b1;
                 rst_stride_ended = !is_last_filter; //TODO: previously on wait_for_write, could cause problems, may need to be always 1
                 next_psum_raddr = !psum_mode;
+                rst_psum_raddr = psum_mode;
             end
             READ_REQ: begin
                 psum_buffer_ren = can_read_psum;
