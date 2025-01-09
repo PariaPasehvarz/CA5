@@ -187,10 +187,10 @@ module tb();
         filter_write_or_skip[17] = write;
     end
 
-    integer i;
+    integer k;
     initial begin
         #200;
-        for (i = 0; i < 16; i = i+1) begin
+        for (k = 0; k < 16; k = k+1) begin
             psum_buffer_wen = 1;
             psum_buffer_in = psums[psums_write_index];
             while (psum_buffer_ready == 0) begin
@@ -204,6 +204,7 @@ module tb();
         psum_buffer_wen = 0;
     end
 
+    integer i;
     initial begin
         #200;
         for (i = 0; i < 18; i = i+1) begin
