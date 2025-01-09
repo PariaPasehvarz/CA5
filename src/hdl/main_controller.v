@@ -235,10 +235,12 @@ module main_controller #(parameter FILTER_ADDR_WIDTH) (
                 //next_stride = 1'b1;
                 rst_f_counter = 1'b1;
                 done = 1'b1;
+                psum_buffer_ren = 1'b1;
             end
 
             WAIT_FOR_WRITE: begin
                 chip_en = 1'b1;
+                psum_buffer_ren = 1'b1;
             end
 
             NEXT_IF: begin
