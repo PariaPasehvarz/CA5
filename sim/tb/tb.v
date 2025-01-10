@@ -335,7 +335,7 @@ module tb();
     // Other parameters matching top module
     parameter IF_BUFFER_PAR_WRITE = 1;
     parameter IF_PAD_LENGTH = 12;
-    parameter FILTER_PAD_LENGTH = 16;
+    parameter FILTER_PAD_LENGTH = 10;
     parameter FILTER_BUFFER_PAR_WRITE = 1;
 
     parameter RESULT_BUFFER_WIDTH = FILTER_BUFFER_WIDTH;
