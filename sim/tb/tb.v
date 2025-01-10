@@ -325,7 +325,7 @@
 // endmodule
 
 
-// Equal to mode3
+// Equal to mode3-3
 `define CLK 10
 `define CLK_HALF 5
 module tb();
@@ -345,7 +345,7 @@ module tb();
     // Other parameters matching top module
     parameter IF_BUFFER_PAR_WRITE = 1;
     parameter IF_PAD_LENGTH = 12;
-    parameter FILTER_PAD_LENGTH = 10;
+    parameter FILTER_PAD_LENGTH = 6;
     parameter FILTER_BUFFER_PAR_WRITE = 1;
 
     parameter RESULT_BUFFER_WIDTH = FILTER_BUFFER_WIDTH;
@@ -454,9 +454,9 @@ module tb();
         forever #(`CLK_HALF) clk = ~clk;
     end
 
-    parameter input_if_count = 12;
-    parameter input_filter_count = 10;
-    parameter input_psum_count = 3;
+    parameter input_if_count = 10;
+    parameter input_filter_count = 6;
+    parameter input_psum_count = 5;
 
     reg signed[IFMAP_BUFFER_WIDTH-1:0] ifmaps [0:input_if_count-1];
     reg signed [FILTER_BUFFER_WIDTH-1:0] filters [0:input_filter_count-1];
@@ -470,7 +470,7 @@ module tb();
 
     initial begin
 
-        file = $fopen("./file/test_31_filter.txt", "r");
+        file = $fopen("./file/test_33_filter.txt", "r");
         
         if (file == 0) begin
         $display("Error: File not found!");
@@ -487,7 +487,7 @@ module tb();
         end
         $fclose(file);
 
-        file = $fopen("./file/test_31_psum_input.txt", "r");
+        file = $fopen("./file/test_33_psum_input.txt", "r");
         
         if (file == 0) begin
         $display("Error: File not found!");
@@ -504,7 +504,7 @@ module tb();
         end
         $fclose(file);
 
-        file = $fopen("./file/test_31_ifmap.txt", "r");
+        file = $fopen("./file/test_33_ifmap.txt", "r");
         
         if (file == 0) begin
         $display("Error: File not found!");
@@ -534,7 +534,7 @@ module tb();
     integer k;
     initial begin
         #200;
-        for (k = 0; k < 3; k = k+1) begin
+        for (k = 0; k < 5; k = k+1) begin
             psum_buffer_wen = 1;
             psum_buffer_in = psums[psums_write_index];
             while (psum_buffer_ready == 0) begin
@@ -551,7 +551,7 @@ module tb();
     integer i;
     initial begin
         #200;
-        for (i = 0; i < 12; i = i+1) begin
+        for (i = 0; i < 10; i = i+1) begin
             IFmap_buffer_write_enable = 1;
             IFmap_buffer_in = ifmaps[ifmap_write_index];
             while (IFmap_buffer_ready == 0) begin
@@ -582,7 +582,7 @@ module tb();
 
     initial begin
         #200;
-        for (j = 0; j < 10; j = j+1) begin
+        for (j = 0; j < 6; j = j+1) begin
             filter_buffer_write_enable = 1;
             filter_buffer_in = filters[filter_write_index];
             while (filter_buffer_ready == 0) begin
@@ -607,7 +607,7 @@ module tb();
         reset = 1;
         start = 0;
         stride = 1;
-        filter_size = 10;
+        filter_size = 6;
         IFmap_buffer_write_enable = 0;
         filter_buffer_write_enable = 0;
         result_buffer_read_enable = 0;
