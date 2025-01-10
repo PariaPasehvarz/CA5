@@ -229,8 +229,8 @@ module main_controller #(parameter FILTER_ADDR_WIDTH) (
                 ren = run_pipe;
                 en_f_counter = run_pipe;
                 next_stride = run_pipe & !stride_ended & !ended & (interleaved_mode ? (is_second_filter & go_next_stride): go_next_stride);
-                next_filter = !freeze & (interleaved_mode ? (is_second_filter & go_next_filter) : go_next_filter);
-                rst_stride = !freeze & (interleaved_mode ? (is_second_filter & go_next_filter) : go_next_filter);
+                next_filter = !freeze & (interleaved_mode ? (!is_second_filter & go_next_filter) : go_next_filter);
+                rst_stride = !freeze & (interleaved_mode ? (!is_second_filter & go_next_filter) : go_next_filter);
                 first_time = run_pipe ? 0 :first_time;
                 rst_psum_raddr = psum_mode;
                 toggle_filter = ~freeze & go_next_stride;
