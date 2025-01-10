@@ -498,9 +498,9 @@ module tb();
             #(`CLK);
         end
 
-        for (i = 0; i<4;i = i + 1) begin //insert an if of size filter_size to output the last psum
+        for (i = 0; i<5;i = i + 1) begin //insert an if of size filter_size to output the last psum
             IFmap_buffer_write_enable = 1;
-            IFmap_buffer_in = i == 0 ? 18'b10_0000_0000_0000_0000 : i == 3 ? 18'b01_0000_0000_0000_0000 :  0;
+            IFmap_buffer_in = i == 0 ? 18'b10_0000_0000_0000_0000 : i == 4 ? 18'b01_0000_0000_0000_0000 :  0;
             while (IFmap_buffer_ready == 0) begin
                 #(`CLK_HALF);
             end
@@ -536,8 +536,8 @@ module tb();
         read_psum_index = 0;
         reset = 1;
         start = 0;
-        stride = 4;
-        filter_size = 4;
+        stride = 1;
+        filter_size = 5;
         IFmap_buffer_write_enable = 0;
         filter_buffer_write_enable = 0;
         result_buffer_read_enable = 0;
