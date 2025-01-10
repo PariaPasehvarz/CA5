@@ -121,7 +121,7 @@ module main_controller #(parameter FILTER_ADDR_WIDTH) (
                 if (psum_mode) begin
                     next_state = READ_REQ;
                 end
-                else if (is_last_filter & go_next_filter) begin
+                else if (is_last_filter & ~is_second_filter & go_next_filter) begin
                     next_state = NEXT_IF;
                 end else if (freeze)
                     next_state = PIPELINE_FULL;
