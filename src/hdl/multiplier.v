@@ -5,9 +5,9 @@ module multiplier #(
     input  wire                    clk,
     input                         rst,    
     input  wire                    en,     
-    input  wire [A_WIDTH-1:0]      a,       
-    input  wire [B_WIDTH-1:0]      b,       
-    output reg  [A_WIDTH+B_WIDTH-1:0] prod   
+    input  signed [A_WIDTH-1:0]      a,       
+    input  signed [B_WIDTH-1:0]      b,       
+    output reg signed [A_WIDTH+B_WIDTH-1:0] prod   
 );
     
     always @(posedge clk or posedge rst) begin
