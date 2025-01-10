@@ -255,7 +255,7 @@ module tb();
 
     initial begin
         #200;
-        for (j = 0; j < 5; j = j+1) begin
+        for (j = 0; j < 6; j = j+1) begin
             filter_buffer_write_enable = 1;
             filter_buffer_in = filters[filter_write_index];
             while (filter_buffer_ready == 0) begin
