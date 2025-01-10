@@ -57,7 +57,7 @@ module tb();
     wire filter_buffer_full;
     wire filter_buffer_ready;
 
-    wire [RESULT_BUFFER_WIDTH-1:0] result_buffer_out;
+    wire signed [RESULT_BUFFER_WIDTH-1:0] result_buffer_out;
     wire result_buffer_empty;
     wire result_buffer_valid;
     reg result_buffer_read_enable;
@@ -317,8 +317,8 @@ module tb();
     end*/
 
     always @(result_buffer_out) begin
-    $display("Time=%0t result_out=%b", 
-             $time, result_buffer_out);
+    $display("Time=%0t result_out=%b decimal=%d", 
+             $time, result_buffer_out, result_buffer_out);
     end
 
 
