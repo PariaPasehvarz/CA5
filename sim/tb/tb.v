@@ -34,7 +34,7 @@ module tb();
     parameter PSUM_ADDR_WIDTH = $clog2(PSUM_PAD_LENGTH);
 
     parameter PSUM_BUFFER_WIDTH = RESULT_BUFFER_WIDTH;
-    parameter PSUM_BUFFER_COLUMNS = 16;
+    parameter PSUM_BUFFER_COLUMNS = 64;
 
     // Testbench signals
     reg clk;
