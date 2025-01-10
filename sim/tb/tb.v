@@ -224,32 +224,7 @@
 //             end else begin
 //                 //$display("===== skip %d", i);
 //                 #(`CLK * 50);
-//             end
-//         end
-
-//         for (i = 0; i<4;i = i + 1) begin //insert an if of size filter_size to output the last psum
-//             IFmap_buffer_write_enable = 1;
-//             IFmap_buffer_in = i == 0 ? 18'b10_0000_0000_0000_0000 : i == 3 ? 18'b01_0000_0000_0000_0000 :  0;
-//             while (IFmap_buffer_ready == 0) begin
-//                 #(`CLK_HALF);
-//             end
-//         end
-         
-//     end
-
-//     integer j;
-
-//     initial begin
-//         #200;
-//         for (j = 0; j < 18; j = j+1) begin
-//             if (filter_write_or_skip[j] == write) begin
-//                 filter_buffer_write_enable = 1;
-//                 filter_buffer_in = filters[filter_write_index];
-//                 while (filter_buffer_ready == 0) begin
-//                     #(`CLK_HALF);
-//                 end
-//                 //$display("write filter index %d, value %b", filter_write_index, filters[filter_write_index]);
-//                 #(`CLK + `CLK_HALF);
+//             end           #(`CLK + `CLK_HALF);
 //                 filter_buffer_write_enable = 0;
 //                 filter_write_index = filter_write_index +1;
 //                 #(`CLK);
@@ -448,18 +423,74 @@ module tb();
     parameter input_filter_count = 10;
     parameter input_psum_count = 12;
 
-    reg [IFMAP_BUFFER_WIDTH-1:0] ifmaps [0:input_if_count-1];
-    reg [FILTER_BUFFER_WIDTH-1:0] filters [0:input_filter_count-1];
-    reg [PSUM_BUFFER_WIDTH-1: 0] psums [0:input_psum_count-1];
+    reg signed[IFMAP_BUFFER_WIDTH-1:0] ifmaps [0:input_if_count-1];
+    reg signed [FILTER_BUFFER_WIDTH-1:0] filters [0:input_filter_count-1];
+    reg signed [PSUM_BUFFER_WIDTH-1: 0] psums [0:input_psum_count-1];
 
     integer ifmap_write_index;
     integer filter_write_index;
     integer psums_write_index;
 
+    integer file, status, num, s;
+
     initial begin
-        $readmemb("./file/test_21_filter.txt", filters);
-        $readmemb("./file/test_21_ifmap.txt", ifmaps);
-        $readmemb("./file/test_21_psum_input.txt", psums);
+
+        file = $fopen("./file/test_21_filter.txt", "r");
+        
+        if (file == 0) begin
+        $display("Error: File not found!");
+        $finish;
+        end
+
+        s = 0;
+        while (!$feof(file)) begin
+        status = $fscanf(file, "%d\n", num); 
+        if (status != 0) begin
+            filters[s] = num;
+            s = s + 1;
+        end
+        end
+        $fclose(file);
+
+        file = $fopen("./file/test_21_psum_input.txt", "r");
+        
+        if (file == 0) begin
+        $display("Error: File not found!");
+        $finish;
+        end
+
+        s = 0;
+        while (!$feof(file)) begin
+        status = $fscanf(file, "%d\n", num); 
+        if (status != 0) begin
+            psums[s] = num;
+            s = s + 1;
+        end
+        end
+        $fclose(file);
+
+        file = $fopen("./file/test_21_ifmap.txt", "r");
+        
+        if (file == 0) begin
+        $display("Error: File not found!");
+        end
+
+        s = 0;
+        while (!$feof(file)) begin
+        status = $fscanf(file, "%d\n", num); 
+        if (status != 0) begin
+            if (s == 0) begin
+            ifmaps[s] = {2'b10, num[15:0]}; 
+            end else if ($feof(file)) begin
+            ifmaps[s] = {2'b01, num[15:0]}; 
+            end else begin
+            ifmaps[s] = {2'b00, num[15:0]}; 
+            end
+            s = s + 1;
+        end
+        end
+        $fclose(file);
+
         ifmap_write_index = 0;
         filter_write_index = 0;
         psums_write_index = 0;

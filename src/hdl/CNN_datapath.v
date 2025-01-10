@@ -474,17 +474,7 @@ module CNN_datapath #(
         .full(result_buffer_full),
         .empty(result_buffer_empty)
     );
-
-    // register  #(
-    //     .WIDTH(RESULT_BUFFER_WIDTH)
-    // )ResultRegister(
-    //     .clk(clk),
-    //     .rst(global_rst | rst_result),
-    //     .load(ld_result),
-    //     .data_in(add_out),
-    //     .data_out(result_reg_out)
-    // );
-
+    
     wire [PSUM_BUFFER_WIDTH-1:0] psum_buffer_out;
 
     adder  #(
