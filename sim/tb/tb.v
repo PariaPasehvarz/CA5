@@ -498,12 +498,16 @@ module tb();
             #(`CLK);
         end
 
-        for (i = 0; i<5;i = i + 1) begin //insert an if of size filter_size to output the last psum
+        for (i = 0; i < 5;i = i + 1) begin //insert an if of size filter_size to output the last psum
             IFmap_buffer_write_enable = 1;
             IFmap_buffer_in = i == 0 ? 18'b10_0000_0000_0000_0000 : i == 4 ? 18'b01_0000_0000_0000_0000 :  0;
             while (IFmap_buffer_ready == 0) begin
                 #(`CLK_HALF);
             end
+            //$display("write ifmap index %d, value %b", ifmap_write_index, ifmaps[ifmap_write_index]);
+            #(`CLK + `CLK_HALF);
+            IFmap_buffer_write_enable = 0;
+            #(`CLK);
         end
          
     end
